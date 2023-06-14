@@ -14,7 +14,7 @@ import torch
 import gymnasium as gym
 from utility.utility import Network,Memory
 from torch import nn,optim
-
+import argparse
 #Information unit
 Rollout = namedtuple('Rollout', ['state', 'action', 'reward', 'next', 'done'])
 
@@ -228,18 +228,27 @@ class SACAgent:
         return results
     
 
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--env', type=str,help="name of the environment e.g 'Reacher-v4'",default='Reacher-v4',required=False)
+    parser.add_argument('--epos', type=int,help="number of epochs",default=1000,required=False)
+    
 
-if __name__ == "__main__":
-    N_EP = 1000
-    env_name = "Reacher-v4"
+    args= parser.parse_args()
+    env_name = args.env
+    epos = args.epos
+
     env = gym.make(env_name)
     agent = SACAgent(env, lr=3e-4, gamma=0.99, memory_size=5000, hidden_size=256)
-    learning_data = agent.train(n_episode=N_EP, batch_size=200, report_freq=10)
+    learning_data = agent.train(n_episode=epos, batch_size=200, report_freq=10)
     algo = 'gym_'+env_name.replace('-','_')+'_'
-    actor = os.path.join('actor_'+algo+'.pt')
+    actor = os.path.join('models/actor_'+algo+'_'+str(epos)+
+                         '.pt')
     torch.save(agent.actor.state_dict(),actor)
 
     plt.plot(learning_data,label='Reward over episodes')
     plt.grid()
     plt.show()
 
+if __name__ == "__main__":
+    main()
